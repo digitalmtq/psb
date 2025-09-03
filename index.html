@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lembar Penilaian – Kerangka Dasar</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --brand:#2563eb;
+      --soft:#e5e7eb;
+      --ring:#93c5fd;
+      --success:#16a34a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--ink);
+      background:linear-gradient(180deg,#fafbff, #f2f4fb 40%, #eef1f9);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 16px; background:var(--card); border-bottom:1px solid var(--soft);
+    }
+    header h1{font-size:18px; margin:0}
+    .container{
+      height:calc(100vh - 56px);
+      display:grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap:12px; padding:12px;
+    }
+    .panel{
+      background:var(--card); border:1px solid var(--soft); border-radius:14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+      overflow:auto;
+    }
+    .panel .inner{padding:16px}
+    .section{margin-bottom:16px}
+    .section h3{margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
+    label{display:block; font-size:13px; margin-bottom:8px}
+    input[type="text"], input[type="date"], input[type="number"], select, textarea{
+      width:100%; padding:10px 12px; border:1px solid var(--soft); border-radius:10px; font:inherit; background:#fff;
+    }
+    textarea{min-height:90px; resize:vertical}
+
+    .grid-2{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .grid-3{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
+
+    .rubric-row{display:grid; grid-template-columns: 140px 1fr 52px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed #eceff5}
+    .rubric-row:last-child{border-bottom:none}
+    .rubric-name{font-size:14px}
+    .rubric-score output{display:inline-block; min-width:40px; text-align:right; font-variant-numeric: tabular-nums}
+    input[type="range"]{width:100%}
+
+    .summary{
+      display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; padding:12px; border:1px solid var(--soft); border-radius:12px; background:#fafafa;
+    }
+    .summary .big{font-size:28px; font-weight:700}
+    .badge{display:inline-block; padding:4px 10px; border-radius:999px; background:#eef6ff; color:#0b63d1; font-weight:600}
+
+    .actions{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{appearance:none; border:1px solid var(--soft); background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; font:inherit}
+    .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
+    .btn.ghost{background:transparent}
+    .btn:focus{outline:3px solid var(--ring); outline-offset:2px}
+
+    /* Right panel (Mushaf) */
+    .mushaf-header{position:sticky; top:0; z-index:5; background:var(--card); border-bottom:1px solid var(--soft); padding:10px 12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .mushaf-area{padding:18px; line-height:2.1; font-size:26px; direction:rtl; text-align:justify; font-family: "Traditional Arabic", "Amiri", serif}
+    .ayah{padding:2px 6px; border-radius:6px; display:inline}
+    .ayah.highlight{background:#fff7cc}
+    .ayah-num{font-size:.7em; opacity:.7; padding:0 6px}
+
+    .muted{color:var(--muted)}
+
+    @media (max-width: 920px){
+      .container{grid-template-columns: 1fr}
+      .mushaf-area{font-size:24px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 Lembar Penilaian Bacaan Al‑Qur'an – Kerangka Dasar</h1>
+    <div class="muted">v0 – struktur awal (kiri form, kanan mushaf)</div>
+  </header>
+
+  <main class="container">
+    <!-- KIRI: FORM PENILAIAN -->
+    <section class="panel" id="formPanel" aria-label="Form Penilaian">
+      <div class="inner">
+        <!-- Identitas -->
+        <div class="section">
+          <h3>Identitas</h3>
+          <div class="grid-2">
+            <label>Nama Santri
+              <input type="text" id="namaSantri" placeholder="Contoh: Ahmad Zaki" />
+            </label>
+            <label>NIS
+              <input type="text" id="nisSantri" placeholder="Contoh: 552233" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label>Kelas / Halaqah
+              <input type="text" id="kelasSantri" placeholder="Contoh: Kelas 3 – Halaqah Ust. Budi" />
+            </label>
+            <label>Tanggal
+              <input type="date" id="tanggal" />
+            </label>
+          </div>
+          <label>Penguji
+            <input type="text" id="penguji" placeholder="Nama Ustadz/Ustadzah" />
+          </label>
+        </div>
+
+        <!-- Rujukan bacaan -->
+        <div class="section">
+          <h3>Rujukan Bacaan</h3>
+          <div class="grid-2">
+            <label>Surah
+              <select id="surahSelectLeft">
+                <option value="al-fatihah">Al‑Fātiḥah (1)</option>
+                <option value="al-baqarah">Al‑Baqarah (2)</option>
+                <option value="an-nas">An‑Nās (114)</option>
+              </select>
+            </label>
+            <label>Halaman (opsional)
+              <input type="number" id="halaman" placeholder="Nomor halaman mushaf" min="1" />
+            </label>
+          </div>
+          <div class="grid-3">
+            <label>Ayat dari
+              <input type="number" id="ayatDari" min="1" value="1" />
+            </label>
+            <label>Ayat sampai
+              <input type="number" id="ayatSampai" min="1" value="7" />
+            </label>
+            <label>Pengulangan
+              <input type="number" id="pengulangan" min="1" value="1" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Aspek Penilaian (contoh rubrik sederhana) -->
+        <div class="section">
+          <h3>Aspek Penilaian</h3>
+          <div class="rubric-row">
+            <div class="rubric-name">Tajwid <span class="muted">(30%)</span></div>
+            <div class="rubric-score"><input type="range" id="rTajwid" min="0" max="100" step="1" value="80" /></div>
+            <div><output id="oTajwid">80</output></div>
+          </div>
+          <div class="rubric-row">
+            <div class="rubric-name">Makharijul Huruf <span class="muted">(25%)</span></div>
+            <div class="rubric-score"><input type="range" id="rMakharij" min="0" max="100" step="1" value="80" /></div>
+            <div><output id="oMakharij">80</output></div>
+          </div>
+          <div class="rubric-row">
+            <div class="rubric-name">Kelancaran <span class="muted">(25%)</span></div>
+            <div class="rubric-score"><input type="range" id="rLancar" min="0" max="100" step="1" value="80" /></div>
+            <div><output id="oLancar">80</output></div>
+          </div>
+          <div class="rubric-row">
+            <div class="rubric-name">Tartil/Irama <span class="muted">(15%)</span></div>
+            <div class="rubric-score"><input type="range" id="rTartil" min="0" max="100" step="1" value="80" /></div>
+            <div><output id="oTartil">80</output></div>
+          </div>
+          <div class="rubric-row">
+            <div class="rubric-name">Adab/Sikap <span class="muted">(5%)</span></div>
+            <div class="rubric-score"><input type="range" id="rAdab" min="0" max="100" step="1" value="80" /></div>
+            <div><output id="oAdab">80</output></div>
+          </div>
+        </div>
+
+        <!-- Catatan -->
+        <div class="section">
+          <h3>Catatan</h3>
+          <textarea id="catatan" placeholder="Catatan penguji… (lafaz perlu ditekan, mad iwad, idgham, dsb.)"></textarea>
+        </div>
+
+        <!-- Ringkasan & Aksi -->
+        <div class="section">
+          <div class="summary" id="summaryBox" aria-live="polite">
+            <div>
+              <div class="muted">Nilai Akhir</div>
+              <div class="big" id="nilaiAkhir">80.0</div>
+            </div>
+            <div>
+              <div class="muted">Predikat</div>
+              <div class="badge" id="predikat">B</div>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="btnSimpan" type="button">Simpan</button>
+          <button class="btn" id="btnUnduhPdf" type="button">Unduh PDF (Coming Soon)</button>
+          <button class="btn ghost" id="btnReset" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- KANAN: HALAMAN AL-QUR'AN (placeholder kerangka) -->
+    <section class="panel" id="mushafPanel" aria-label="Halaman Mushaf">
+      <div class="mushaf-header">
+        <strong>Halaman Al‑Qur'an</strong>
+        <span class="muted">/ pratinjau lokal</span>
+        <span style="flex:1"></span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ukuran teks
+          <input type="range" id="fontScale" min="20" max="40" value="26" />
+        </label>
+      </div>
+      <div class="mushaf-area" id="mushafArea">
+        <!-- Contoh konten Surah Al‑Fātiḥah (untuk kerangka). Bisa diganti dengan embed/iframe di versi lanjut) -->
+        <div id="mushaf-al-fatihah">
+          <span class="ayah" data-ayah="1">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ <span class="ayah-num">﴿١﴾</span></span>
+          <span class="ayah" data-ayah="2">الْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ <span class="ayah-num">﴿٢﴾</span></span>
+          <span class="ayah" data-ayah="3">الرَّحْمٰنِ الرَّحِيْمِ <span class="ayah-num">﴿٣﴾</span></span>
+          <span class="ayah" data-ayah="4">مٰلِكِ يَوْمِ الدِّيْنِ <span class="ayah-num">﴿٤﴾</span></span>
+          <span class="ayah" data-ayah="5">اِيَّاكَ نَعْبُدُ وَاِيَّاكَ نَسْتَعِيْنُ <span class="ayah-num">﴿٥﴾</span></span>
+          <span class="ayah" data-ayah="6">اِهْدِنَا الصِّرَاطَ الْمُسْتَقِيْمَ <span class="ayah-num">﴿٦﴾</span></span>
+          <span class="ayah" data-ayah="7">صِرَاطَ الَّذِيْنَ اَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوْبِ عَلَيْهِمْ وَلَا الضَّآلِّينَ <span class="ayah-num">﴿٧﴾</span></span>
+        </div>
+        <div id="mushaf-placeholder" class="muted" style="display:none">Konten mushaf untuk surah ini belum diisi. (Kerangka)</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ====== Konfigurasi rubrik (bobot) ======
+    const BOBOT = { tajwid: 0.30, makharij: 0.25, lancar: 0.25, tartil: 0.15, adab: 0.05 };
+
+    // ====== Util ======
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+
+    // ====== Binding input → output angka ======
+    function bindRange(idRange, idOut){
+      const el = $("#"+idRange); const out = $("#"+idOut);
+      if(!el||!out) return;
+      const fn = ()=>{ out.value = Number(el.value).toFixed(0); hitungNilaiAkhir(); };
+      el.addEventListener('input', fn); fn();
+    }
+
+    bindRange('rTajwid','oTajwid');
+    bindRange('rMakharij','oMakharij');
+    bindRange('rLancar','oLancar');
+    bindRange('rTartil','oTartil');
+    bindRange('rAdab','oAdab');
+
+    // ====== Hitung nilai akhir ======
+    function hitungNilaiAkhir(){
+      const v = {
+        tajwid: +$('#rTajwid').value || 0,
+        makharij: +$('#rMakharij').value || 0,
+        lancar: +$('#rLancar').value || 0,
+        tartil: +$('#rTartil').value || 0,
+        adab: +$('#rAdab').value || 0,
+      };
+      const total = v.tajwid*BOBOT.tajwid + v.makharij*BOBOT.makharij + v.lancar*BOBOT.lancar + v.tartil*BOBOT.tartil + v.adab*BOBOT.adab;
+      $('#nilaiAkhir').textContent = total.toFixed(1);
+      $('#predikat').textContent = predikat(total);
+      $('#summaryBox').style.borderColor = total >= 85 ? '#bbf7d0' : '#fde68a';
+      $('#summaryBox').style.background = total >= 85 ? '#f0fdf4' : '#fffbeb';
+    }
+
+    function predikat(n){
+      if(n>=90) return 'A';
+      if(n>=85) return 'A-';
+      if(n>=80) return 'B+';
+      if(n>=75) return 'B';
+      if(n>=70) return 'B-';
+      if(n>=65) return 'C+';
+      if(n>=60) return 'C';
+      return 'D';
+    }
+
+    // ====== Kontrol Mushaf (font size, highlight ayat) ======
+    const fontSlider = $('#fontScale');
+    const mushafArea = $('#mushafArea');
+    fontSlider?.addEventListener('input', ()=>{
+      const px = +fontSlider.value || 26;
+      mushafArea.style.fontSize = px + 'px';
+    });
+
+    function highlightAyat(){
+      const dari = +$('#ayatDari').value || 1;
+      const sampai = +$('#ayatSampai').value || dari;
+      $$('.ayah', mushafArea).forEach(el=> el.classList.remove('highlight'));
+      $$('.ayah', mushafArea).forEach(el=>{
+        const a = +el.getAttribute('data-ayah');
+        if(a>=dari && a<=sampai) el.classList.add('highlight');
+      });
+    }
+
+    $('#ayatDari').addEventListener('input', highlightAyat);
+    $('#ayatSampai').addEventListener('input', highlightAyat);
+    highlightAyat();
+
+    // Ganti surah (kerangka sederhana: contoh hanya Al‑Fatihah)
+    $('#surahSelectLeft').addEventListener('change', (e)=>{
+      const val = e.target.value;
+      const hasFatihah = (val === 'al-fatihah');
+      $('#mushaf-al-fatihah').style.display = hasFatihah ? 'block' : 'none';
+      $('#mushaf-placeholder').style.display = hasFatihah ? 'none' : 'block';
+    });
+
+    // ====== Aksi tombol ======
+    $('#btnReset').addEventListener('click', ()=>{
+      document.querySelector('#formPanel form')?.reset?.(); // antisipasi kalau nanti dibungkus <form>
+      // reset manual yang ada sekarang
+      ['rTajwid','rMakharij','rLancar','rTartil','rAdab'].forEach(id=>{ const el=$('#'+id); if(el){ el.value=80; el.dispatchEvent(new Event('input')); }});
+      $('#catatan').value='';
+      $('#surahSelectLeft').value='al-fatihah';
+      $('#ayatDari').value=1; $('#ayatSampai').value=7; highlightAyat();
+      $('#halaman').value=''; $('#pengulangan').value=1;
+    });
+
+    $('#btnSimpan').addEventListener('click', ()=>{
+      // Kerangka: kumpulkan data dan log. (Nanti bisa diarahkan ke API/LocalStorage)
+      const data = {
+        identitas: {
+          nama: $('#namaSantri').value.trim(),
+          nis: $('#nisSantri').value.trim(),
+          kelas: $('#kelasSantri').value.trim(),
+          tanggal: $('#tanggal').value,
+          penguji: $('#penguji').value.trim(),
+        },
+        bacaan: {
+          surah: $('#surahSelectLeft').value,
+          halaman: $('#halaman').value,
+          ayatDari: +$('#ayatDari').value || 1,
+          ayatSampai: +$('#ayatSampai').value || 1,
+          pengulangan: +$('#pengulangan').value || 1,
+        },
+        nilai: {
+          tajwid: +$('#rTajwid').value || 0,
+          makharij: +$('#rMakharij').value || 0,
+          lancar: +$('#rLancar').value || 0,
+          tartil: +$('#rTartil').value || 0,
+          adab: +$('#rAdab').value || 0,
+          akhir: +$('#nilaiAkhir').textContent || 0,
+          predikat: $('#predikat').textContent,
+        },
+        catatan: $('#catatan').value.trim(),
+        dibuat: new Date().toISOString(),
+      };
+      console.log('[KERANGKA] Data penilaian:', data);
+      // Placeholder umpan balik
+      const btn = $('#btnSimpan');
+      btn.disabled = true; btn.textContent = 'Tersimpan (dummy)…';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Simpan'; }, 1000);
+    });
+
+    $('#btnUnduhPdf').addEventListener('click', ()=>{
+      alert('Fitur PDF belum diaktifkan pada kerangka awal. Nanti bisa dihubungkan ke jsPDF atau server.');
+    });
+  </script>
+</body>
+</html>
