@@ -25,7 +25,7 @@
     }
 
     .container{
-      height:100vh;              /* <- sebelumnya calc(100vh - 56px) */
+      height:100vh;
       display:grid;
       grid-template-columns: minmax(320px, 420px) 1fr;
       grid-template-areas: "form mushaf";
@@ -183,28 +183,15 @@
     <!-- KANAN: HALAMAN AL-QUR'AN -->
     <section class="panel" id="mushafPanel" aria-label="Halaman Mushaf">
       <div class="mushaf-header">
-        <strong>Halaman Al-Qur'an</strong>
-        <span class="muted">/ pilih rentang surat & ayat</span>
-
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Surah dari
-          <select id="surahFrom"></select>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px"><select id="surahFrom"></select>
         </label>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ayat
-          <select id="ayahFrom"></select>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px"><select id="ayahFrom"></select>
         </label>
-        <span class="muted" aria-hidden="true">→</span>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px">ke Surah
-          <select id="surahTo"></select>
+        <span class="muted" aria-hidden="true"></span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">to<select id="surahTo"></select>
         </label>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ayat
-          <select id="ayahTo"></select>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px"><select id="ayahTo"></select>
         </label>
-
-        <span style="flex:1"></span>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ukuran teks
-          <input type="range" id="fontScale" min="20" max="40" value="26" />
-        </label>
-      </div>
 
       <div class="mushaf-area" id="mushafArea">
         <!-- konten ayat dirender via JS -->
@@ -263,6 +250,22 @@
     const fontSlider = $('#fontScale');
     const mushafArea = $('#mushafArea');
 
+    // --- Nama Surah (1..114) ---
+    const SURAH_NAMES = [
+      "Al-Fatihah","Al-Baqarah","Ali 'Imran","An-Nisa'","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Taubah","Yunus",
+      "Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra'","Al-Kahf","Maryam","Ta Ha",
+      "Al-Anbiya'","Al-Hajj","Al-Mu'minun","An-Nur","Al-Furqan","Ash-Shu'ara'","An-Naml","Al-Qasas","Al-'Ankabut","Ar-Rum",
+      "Luqman","As-Sajdah","Al-Ahzab","Saba'","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir",
+      "Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf",
+      "Adz-Dzariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'ah","Al-Hadid","Al-Mujadilah","Al-Hashr","Al-Mumtahanah",
+      "As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij",
+      "Nuh","Al-Jinn","Al-Muzzammil","Al-Muddaththir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba'","An-Nazi'at","'Abasa",
+      "At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad",
+      "Ash-Shams","Al-Layl","Ad-Duha","Ash-Sharh","At-Tin","Al-'Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-'Adiyat",
+      "Al-Qari'ah","At-Takathur","Al-'Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr",
+      "Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"
+    ];
+
     // Sumber data (meniru konsep aplikasi Anda)
     const SOURCES = {
       quran: 'https://raw.githubusercontent.com/dickymiswardi/mtq/refs/heads/main/symbol1.json',
@@ -275,7 +278,16 @@
     const fontLoadedPages = new Set();
 
     function makeOpts(n){ return Array.from({length:n}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''); }
-    function fillSurahSelect(sel){ const el=$(sel); el.innerHTML = Array.from({length:114}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''); }
+
+    function fillSurahSelect(sel){
+      const el=$(sel);
+      el.innerHTML = Array.from({length:114}, (_,i)=>{
+        const no = i+1;
+        const name = SURAH_NAMES[i] || `Surah ${no}`;
+        return `<option value="${no}">${no} — ${name}</option>`;
+      }).join('');
+    }
+
     function fillAyahSelect(sel, max){ const el=$(sel); el.innerHTML = makeOpts(max); }
 
     function computeSurahMax(){
