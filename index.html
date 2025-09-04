@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lembar Penilaian – Revisi (Dropdown Surah & Ayat → Surah & Ayat)</title>
+  <title>Lembar Penilaian – Page + Surah/Ayat Sinkron</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -31,7 +31,6 @@
       grid-template-areas: "form mushaf";
       gap:12px; padding:12px;
     }
-    /* grid-area mapping */
     #formPanel{grid-area:form}
     #mushafPanel{grid-area:mushaf}
 
@@ -121,8 +120,6 @@
           </label>
         </div>
 
-        <!-- (Rujukan bacaan dipindah ke panel kanan) -->
-
         <!-- Aspek Penilaian -->
         <div class="section">
           <h3>Aspek Penilaian</h3>
@@ -183,15 +180,29 @@
     <!-- KANAN: HALAMAN AL-QUR'AN -->
     <section class="panel" id="mushafPanel" aria-label="Halaman Mushaf">
       <div class="mushaf-header">
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px"><select id="surahFrom"></select>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Page
+          <select id="pageSelect"></select>
         </label>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px"><select id="ayahFrom"></select>
+
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Surah dari
+          <select id="surahFrom"></select>
         </label>
-        <span class="muted" aria-hidden="true"></span>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px">to<select id="surahTo"></select>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ayat
+          <select id="ayahFrom"></select>
         </label>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px"><select id="ayahTo"></select>
+        <span class="muted" aria-hidden="true">→</span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">ke Surah
+          <select id="surahTo"></select>
         </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ayat
+          <select id="ayahTo"></select>
+        </label>
+
+        <span style="flex:1"></span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ukuran teks
+          <input type="range" id="fontScale" min="20" max="40" value="26" />
+        </label>
+      </div>
 
       <div class="mushaf-area" id="mushafArea">
         <!-- konten ayat dirender via JS -->
@@ -206,6 +217,7 @@
     // ====== Util ======
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+    const cmpPair = (p, q) => (p.surah - q.surah) || (p.ayat - q.ayat);
 
     // ====== Binding input → output angka ======
     function bindRange(idRange, idOut){
@@ -246,7 +258,7 @@
       return 'D';
     }
 
-    // ====== Mushaf controls (font size + dropdown SURAH/AYAT → SURAH/AYAT) ======
+    // ====== Mushaf controls ======
     const fontSlider = $('#fontScale');
     const mushafArea = $('#mushafArea');
 
@@ -266,17 +278,19 @@
       "Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"
     ];
 
-    // Sumber data (meniru konsep aplikasi Anda)
+    // Sumber data
     const SOURCES = {
       quran: 'https://raw.githubusercontent.com/dickymiswardi/mtq/refs/heads/main/symbol1.json',
       pageMap: 'https://raw.githubusercontent.com/dickymiswardi/tadabbur/refs/heads/main/ayah_page_map.json'
     };
 
-    let quranData = {};          // "s:a" → teks berseparator '|'
-    let ayahPageMap = {};        // "s:a" → nomor halaman
+    let quranData = {};          // "s:a" → teks (dengan '|' jadi spasi)
+    let ayahPageMap = {};        // "s:a" → nomor halaman (1..604)
     const surahMaxAyah = {};     // s → jumlah ayat per surah
     const fontLoadedPages = new Set();
+    const pageIndex = {};        // page → [{surah, ayat}] (urut)
 
+    // ====== Helper dropdown ======
     function makeOpts(n){ return Array.from({length:n}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''); }
 
     function fillSurahSelect(sel){
@@ -290,6 +304,12 @@
 
     function fillAyahSelect(sel, max){ const el=$(sel); el.innerHTML = makeOpts(max); }
 
+    function fillPageSelect(){
+      const el = $('#pageSelect');
+      el.innerHTML = makeOpts(604); // 1..604
+    }
+
+    // ====== Data prep ======
     function computeSurahMax(){
       for(const key of Object.keys(quranData||{})){
         const [s,a] = key.split(':').map(Number);
@@ -297,6 +317,18 @@
         if(!surahMaxAyah[s] || a>surahMaxAyah[s]) surahMaxAyah[s]=a;
       }
       for(let s=1;s<=114;s++){ if(!surahMaxAyah[s]) surahMaxAyah[s]=300; } // fallback
+    }
+
+    function buildPageIndex(){
+      // Buat indeks halaman → pasangan (surah, ayat) terurut
+      for(const [key, page] of Object.entries(ayahPageMap)){
+        const [s,a] = key.split(':').map(Number);
+        if(!s || !a || !page) continue;
+        (pageIndex[page] ||= []).push({surah:s, ayat:a});
+      }
+      for(const p of Object.keys(pageIndex)){
+        pageIndex[p].sort(cmpPair);
+      }
     }
 
     async function loadQuran(){
@@ -307,39 +339,24 @@
         ]);
         quranData = q; ayahPageMap = p;
         computeSurahMax();
+        buildPageIndex();
 
         // isi dropdown awal
+        fillPageSelect();
         fillSurahSelect('#surahFrom'); fillSurahSelect('#surahTo');
         fillAyahSelect('#ayahFrom', surahMaxAyah[1]||7);
         fillAyahSelect('#ayahTo',   surahMaxAyah[1]||7);
-        $('#surahFrom').value='1'; $('#ayahFrom').value='1';
-        $('#surahTo').value='1';   $('#ayahTo').value=String(surahMaxAyah[1]||7);
 
-        renderMushafRange();
+        // default: Page 1
+        $('#pageSelect').value = '1';
+        applyPageSelection(1); // ini juga set Surah/Ayat dari & ke
       }catch(err){
         mushafArea.innerHTML = `<div class="muted">Gagal memuat data Qur'an. Periksa koneksi atau sumber data.</div>`;
         console.error(err);
       }
     }
 
-    function guardRange(){
-      const sF=+$('#surahFrom').value, aF=+$('#ayahFrom').value;
-      let sT=+$('#surahTo').value,   aT=+$('#ayahTo').value;
-      if(sT<sF || (sT===sF && aT<aF)){
-        $('#surahTo').value=String(sF);
-        fillAyahSelect('#ayahTo', surahMaxAyah[sF]||aF);
-        $('#ayahTo').value=String(aF);
-      }
-    }
-
-    function onChangeSurah(which){
-      const s = +(which==='from' ? $('#surahFrom').value : $('#surahTo').value) || 1;
-      const max = surahMaxAyah[s] || 300;
-      fillAyahSelect(which==='from' ? '#ayahFrom' : '#ayahTo', max);
-      if(which==='to') $('#ayahTo').value = String(max);
-      guardRange(); renderMushafRange();
-    }
-
+    // ====== Rendering ======
     async function ensurePageFont(page){
       if(fontLoadedPages.has(page)) return;
       const pageStr = String(page).padStart(3,'0');
@@ -386,24 +403,76 @@
           const span = document.createElement('span');
           span.className = 'ayah';
           span.dataset.ayah = String(item.ayat);
-          // TANPA PENOMORAN AYAT:
-          span.textContent = item.teks;
+          span.textContent = item.teks; // tanpa penomoran
           pageDiv.appendChild(span);
           pageDiv.appendChild(document.createTextNode(' '));
         });
         mushafArea.appendChild(pageDiv);
       }
+
+      // Sinkronkan pageSelect bila range hanya 1 halaman
+      if(pages.length === 1){
+        $('#pageSelect').value = String(pages[0]);
+      }
+
       if(!pages.length){
         mushafArea.innerHTML = `<div class="muted">Tidak ada ayat pada rentang yang dipilih.</div>`;
       }
     }
 
-    // Bindings
+    function setRange(sFrom, aFrom, sTo, aTo){
+      // Sesuaikan pilihan dan isi opsi ayat berdasarkan surah
+      $('#surahFrom').value = String(sFrom);
+      fillAyahSelect('#ayahFrom', surahMaxAyah[sFrom] || aFrom);
+      $('#ayahFrom').value = String(aFrom);
+
+      $('#surahTo').value = String(sTo);
+      fillAyahSelect('#ayahTo', surahMaxAyah[sTo] || aTo);
+      $('#ayahTo').value = String(aTo);
+    }
+
+    function applyPageSelection(page){
+      const arr = pageIndex[page] || [];
+      if(!arr.length){
+        mushafArea.innerHTML = `<div class="muted">Halaman ${page} tidak memiliki data.</div>`;
+        return;
+      }
+      const first = arr[0];
+      const last  = arr[arr.length - 1];
+      setRange(first.surah, first.ayat, last.surah, last.ayat);
+      renderMushafRange();
+    }
+
+    function guardRange(){
+      const sF=+$('#surahFrom').value, aF=+$('#ayahFrom').value;
+      let sT=+$('#surahTo').value,   aT=+$('#ayahTo').value;
+      if(sT<sF || (sT===sF && aT<aF)){
+        $('#surahTo').value=String(sF);
+        fillAyahSelect('#ayahTo', surahMaxAyah[sF]||aF);
+        $('#ayahTo').value=String(aF);
+      }
+    }
+
+    function onChangeSurah(which){
+      const s = +(which==='from' ? $('#surahFrom').value : $('#surahTo').value) || 1;
+      const max = surahMaxAyah[s] || 300;
+      fillAyahSelect(which==='from' ? '#ayahFrom' : '#ayahTo', max);
+      if(which==='to') $('#ayahTo').value = String(max);
+      guardRange(); renderMushafRange();
+    }
+
+    // ====== Bindings ======
     fontSlider?.addEventListener('input', ()=>{ renderMushafRange(); });
+
     $('#surahFrom').addEventListener('change', ()=>onChangeSurah('from'));
     $('#surahTo').addEventListener('change', ()=>onChangeSurah('to'));
     $('#ayahFrom').addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
     $('#ayahTo').addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
+
+    $('#pageSelect').addEventListener('change', ()=>{
+      const p = +$('#pageSelect').value || 1;
+      applyPageSelection(p);
+    });
 
     // start
     loadQuran();
@@ -414,15 +483,9 @@
       ['rTajwid','rMakharij','rLancar','rTartil','rAdab'].forEach(id=>{ const el=$('#'+id); if(el){ el.value=80; el.dispatchEvent(new Event('input')); }});
       $('#catatan').value='';
 
-      // reset mushaf range
-      $('#surahFrom').value='1';
-      $('#surahTo').value='1';
-      const max = surahMaxAyah[1] || 7;
-      fillAyahSelect('#ayahFrom', max);
-      fillAyahSelect('#ayahTo', max);
-      $('#ayahFrom').value='1';
-      $('#ayahTo').value=String(max);
-      renderMushafRange();
+      // reset ke Page 1
+      $('#pageSelect').value='1';
+      applyPageSelection(1);
     });
 
     $('#btnSimpan').addEventListener('click', ()=>{
@@ -435,6 +498,7 @@
           penguji: $('#penguji').value.trim(),
         },
         bacaan: {
+          page: +$('#pageSelect').value || null,
           surahDari: +$('#surahFrom').value || 1,
           ayatDari: +$('#ayahFrom').value || 1,
           surahSampai: +$('#surahTo').value || (+$('#surahFrom').value || 1),
