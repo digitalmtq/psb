@@ -23,14 +23,9 @@
       color:var(--ink);
       background:linear-gradient(180deg,#fafbff, #f2f4fb 40%, #eef1f9);
     }
-    header{
-      position:sticky; top:0; z-index:10;
-      display:flex; align-items:center; justify-content:space-between;
-      padding:12px 16px; background:var(--card); border-bottom:1px solid var(--soft);
-    }
-    header h1{font-size:18px; margin:0}
+
     .container{
-      height:calc(100vh - 56px);
+      height:100vh;              /* <- sebelumnya calc(100vh - 56px) */
       display:grid;
       grid-template-columns: minmax(320px, 420px) 1fr;
       grid-template-areas: "form mushaf";
@@ -96,10 +91,7 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>📋 Lembar Penilaian Bacaan Al-Qur'an</h1>
-    <div class="muted">Form kiri & Mushaf kanan (mobile: Mushaf → Form)</div>
-  </header>
+  <!-- Header dihapus total -->
 
   <main class="container">
     <!-- KIRI: FORM PENILAIAN -->
@@ -382,7 +374,7 @@
           const span = document.createElement('span');
           span.className = 'ayah';
           span.dataset.ayah = String(item.ayat);
-          // ==== TANPA PENOMORAN AYAT ====
+          // TANPA PENOMORAN AYAT:
           span.textContent = item.teks;
           pageDiv.appendChild(span);
           pageDiv.appendChild(document.createTextNode(' '));
