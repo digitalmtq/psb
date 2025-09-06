@@ -1,11 +1,14 @@
 [build]
-  functions = "netlify/functions"
-  publish   = "dist"   # ubah kalau frontend kamu bukan di folder dist
+  publish   = "."                 # sajikan root repo
+  functions = "netlify/functions" # folder functions
 
 [functions]
   node_bundler = "esbuild"
 
-# Optional: CORS header global
+[build.environment]
+  NODE_VERSION = "18"
+
+# (opsional) CORS global
 [[headers]]
   for = "/*"
   [headers.values]
