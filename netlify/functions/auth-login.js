@@ -11,11 +11,11 @@ exports.handler = async function (event) {
     if (!username || !password) return json(400, { error: "username & password wajib diisi" });
 
     // PAKAI ENV YANG KONSISTEN
-    const token = process.env.MTQ_TOKEN; // <- pastikan ini di Netlify
-    if (!token) return json(500, { error: "Server login belum dikonfigurasi (MTQ_TOKEN kosong)." });
+    const token = process.env.PSB_TOKEN; // <- pastikan ini di Netlify
+    if (!token) return json(500, { error: "Server login belum dikonfigurasi (PSB_TOKEN kosong)." });
 
     // PAKAI REPO & FILE YANG SAMA DENGAN YANG KAMU ISI!
-    const url = "https://api.github.com/repos/digitalmtq/server/contents/user.json?ref=main";
+    const url = "https://api.github.com/repos/digitalmtq/psbserver/contents/user.json?ref=main";
 
     const res = await fetch(url, {
       headers: {
