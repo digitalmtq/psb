@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lembar Penilaian – Page + Surah/Ayat Sinkron</title>
+  <title>Lembar Penilaian – Page + Surah/Ayat Sinkron (Tap Scoring)</title>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -14,6 +14,9 @@
       --soft:#e5e7eb;
       --ring:#93c5fd;
       --success:#16a34a;
+      --ok:#bbf7d0; --okBg:#f0fdf4;
+      --warn:#fde68a; --warnBg:#fffbeb;
+      --green:#22c55e33; --yellow:#facc1533; --red:#ef444433;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -50,14 +53,9 @@
 
     .grid-2{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
 
-    .rubric-row{display:grid; grid-template-columns: 140px 1fr 52px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px dashed #eceff5}
-    .rubric-row:last-child{border-bottom:none}
-    .rubric-name{font-size:14px}
-    .rubric-score output{display:inline-block; min-width:40px; text-align:right; font-variant-numeric: tabular-nums}
-    input[type="range"]{width:100%}
-
     .summary{
       display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; padding:12px; border:1px solid var(--soft); border-radius:12px; background:#fafafa;
+      transition:border-color .2s, background .2s;
     }
     .summary .big{font-size:28px; font-weight:700}
     .badge{display:inline-block; padding:4px 10px; border-radius:999px; background:#eef6ff; color:#0b63d1; font-weight:600}
@@ -74,8 +72,20 @@
       border-bottom:1px solid var(--soft); padding:10px 12px;
       display:flex; gap:10px; align-items:center; flex-wrap:wrap
     }
+    .legend{
+      display:flex; gap:8px; align-items:center; font-size:12px; color:var(--muted);
+      background:#f8fafc; border:1px solid var(--soft); padding:6px 8px; border-radius:999px;
+    }
+    .dot{width:10px; height:10px; border-radius:2px; display:inline-block}
+    .dot.g{background:var(--green)}
+    .dot.y{background:var(--yellow)}
+    .dot.r{background:var(--red)}
+
     .mushaf-area{padding:18px; line-height:2.1; font-size:26px; direction:rtl; text-align:justify; font-family: "Traditional Arabic", "Amiri", serif}
-    .ayah{padding:2px 6px; border-radius:6px; display:inline}
+    .ayah{padding:2px 6px; border-radius:6px; display:inline; cursor:pointer}
+    .ayah.mark-green { background: var(--green); }
+    .ayah.mark-yellow{ background: var(--yellow); }
+    .ayah.mark-red   { background: var(--red); }
     .muted{color:var(--muted)}
 
     @media (max-width: 920px){
@@ -90,90 +100,61 @@
   </style>
 </head>
 <body>
-  <!-- Header dihapus total -->
-
   <main class="container">
     <!-- KIRI: FORM PENILAIAN -->
     <section class="panel" id="formPanel" aria-label="Form Penilaian">
       <div class="inner">
-        <!-- Identitas -->
-        <div class="section">
-          <h3>Identitas</h3>
-          <div class="grid-2">
-            <label>Nama Santri
-              <input type="text" id="namaSantri" placeholder="Contoh: Ahmad Zaki" />
-            </label>
-            <label>NIS
-              <input type="text" id="nisSantri" placeholder="Contoh: 552233" />
-            </label>
-          </div>
-          <div class="grid-2">
-            <label>Kelas / Halaqah
-              <input type="text" id="kelasSantri" placeholder="Contoh: Kelas 3 – Halaqah Ust. Budi" />
-            </label>
-            <label>Tanggal
-              <input type="date" id="tanggal" />
-            </label>
-          </div>
-          <label>Penguji
-            <input type="text" id="penguji" placeholder="Nama Ustadz/Ustadzah" />
-          </label>
-        </div>
-
-        <!-- Aspek Penilaian -->
-        <div class="section">
-          <h3>Aspek Penilaian</h3>
-          <div class="rubric-row">
-            <div class="rubric-name">Tajwid <span class="muted">(30%)</span></div>
-            <div class="rubric-score"><input type="range" id="rTajwid" min="0" max="100" step="1" value="80" /></div>
-            <div><output id="oTajwid">80</output></div>
-          </div>
-          <div class="rubric-row">
-            <div class="rubric-name">Makharijul Huruf <span class="muted">(25%)</span></div>
-            <div class="rubric-score"><input type="range" id="rMakharij" min="0" max="100" step="1" value="80" /></div>
-            <div><output id="oMakharij">80</output></div>
-          </div>
-          <div class="rubric-row">
-            <div class="rubric-name">Kelancaran <span class="muted">(25%)</span></div>
-            <div class="rubric-score"><input type="range" id="rLancar" min="0" max="100" step="1" value="80" /></div>
-            <div><output id="oLancar">80</output></div>
-          </div>
-          <div class="rubric-row">
-            <div class="rubric-name">Tartil/Irama <span class="muted">(15%)</span></div>
-            <div class="rubric-score"><input type="range" id="rTartil" min="0" max="100" step="1" value="80" /></div>
-            <div><output id="oTartil">80</output></div>
-          </div>
-          <div class="rubric-row">
-            <div class="rubric-name">Adab/Sikap <span class="muted">(5%)</span></div>
-            <div class="rubric-score"><input type="range" id="rAdab" min="0" max="100" step="1" value="80" /></div>
-            <div><output id="oAdab">80</output></div>
-          </div>
-        </div>
-
-        <!-- Catatan -->
-        <div class="section">
-          <h3>Catatan</h3>
-          <textarea id="catatan" placeholder="Catatan penguji… (lafaz perlu ditekan, mad iwad, idgham, dsb.)"></textarea>
-        </div>
-
-        <!-- Ringkasan & Aksi -->
-        <div class="section">
-          <div class="summary" id="summaryBox" aria-live="polite">
-            <div>
-              <div class="muted">Nilai Akhir</div>
-              <div class="big" id="nilaiAkhir">80.0</div>
+        <!-- (dibungkus form supaya reset mudah) -->
+        <form id="penilaianForm" onsubmit="return false;">
+          <!-- Identitas -->
+          <div class="section">
+            <h3>Identitas</h3>
+            <div class="grid-2">
+              <label>Nama Santri
+                <input type="text" id="namaSantri" placeholder="Contoh: Ahmad Zaki" />
+              </label>
+              <label>NIS
+                <input type="text" id="nisSantri" placeholder="Contoh: 552233" />
+              </label>
             </div>
-            <div>
-              <div class="muted">Predikat</div>
-              <div class="badge" id="predikat">B</div>
+            <div class="grid-2">
+              <label>Kelas / Halaqah
+                <input type="text" id="kelasSantri" placeholder="Contoh: Kelas 3 – Halaqah Ust. Budi" />
+              </label>
+              <label>Tanggal
+                <input type="date" id="tanggal" />
+              </label>
+            </div>
+            <label>Penguji
+              <input type="text" id="penguji" placeholder="Nama Ustadz/Ustadzah" />
+            </label>
+          </div>
+
+          <!-- Catatan -->
+          <div class="section">
+            <h3>Catatan</h3>
+            <textarea id="catatan" placeholder="Catatan penguji… (lafaz perlu ditekan, mad iwad, idgham, dsb.)"></textarea>
+          </div>
+
+          <!-- Ringkasan & Aksi -->
+          <div class="section">
+            <div class="summary" id="summaryBox" aria-live="polite">
+              <div>
+                <div class="muted">Nilai Akhir</div>
+                <div class="big" id="nilaiAkhir">100.00</div>
+              </div>
+              <div>
+                <div class="muted">Predikat</div>
+                <div class="badge" id="predikat">A</div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="actions">
-          <button class="btn primary" id="btnSimpan" type="button">Simpan</button>
-          <button class="btn" id="btnUnduhPdf" type="button">Unduh PDF (Coming Soon)</button>
-          <button class="btn ghost" id="btnReset" type="button">Reset</button>
-        </div>
+          <div class="actions">
+            <button class="btn primary" id="btnSimpan" type="button">Simpan</button>
+            <button class="btn" id="btnUnduhPdf" type="button">Unduh PDF (Coming Soon)</button>
+            <button class="btn ghost" id="btnReset" type="button">Reset</button>
+          </div>
+        </form>
       </div>
     </section>
 
@@ -202,6 +183,13 @@
         <label style="display:flex; align-items:center; gap:6px; font-size:13px">Ukuran teks
           <input type="range" id="fontScale" min="20" max="40" value="26" />
         </label>
+
+        <div class="legend" title="Tap ayat untuk memberi mark">
+          <span class="dot g"></span> -0.25
+          <span class="dot y"></span> -0.5
+          <span class="dot r"></span> -1
+          <span class="muted">• Ketuk: hijau → kuning → merah → bersih</span>
+        </div>
       </div>
 
       <div class="mushaf-area" id="mushafArea">
@@ -211,42 +199,13 @@
   </main>
 
   <script>
-    // ====== Konfigurasi rubrik (bobot) ======
-    const BOBOT = { tajwid: 0.30, makharij: 0.25, lancar: 0.25, tartil: 0.15, adab: 0.05 };
-
-    // ====== Util ======
+    // ====== Util umum ======
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
     const cmpPair = (p, q) => (p.surah - q.surah) || (p.ayat - q.ayat);
+    const debounce = (fn, wait=60) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
 
-    // ====== Binding input → output angka ======
-    function bindRange(idRange, idOut){
-      const el = $("#"+idRange); const out = $("#"+idOut);
-      if(!el||!out) return;
-      const fn = ()=>{ out.value = Number(el.value).toFixed(0); hitungNilaiAkhir(); };
-      el.addEventListener('input', fn); fn();
-    }
-    bindRange('rTajwid','oTajwid');
-    bindRange('rMakharij','oMakharij');
-    bindRange('rLancar','oLancar');
-    bindRange('rTartil','oTartil');
-    bindRange('rAdab','oAdab');
-
-    // ====== Hitung nilai akhir ======
-    function hitungNilaiAkhir(){
-      const v = {
-        tajwid: +$('#rTajwid').value || 0,
-        makharij: +$('#rMakharij').value || 0,
-        lancar: +$('#rLancar').value || 0,
-        tartil: +$('#rTartil').value || 0,
-        adab: +$('#rAdab').value || 0,
-      };
-      const total = v.tajwid*BOBOT.tajwid + v.makharij*BOBOT.makharij + v.lancar*BOBOT.lancar + v.tartil*BOBOT.tartil + v.adab*BOBOT.adab;
-      $('#nilaiAkhir').textContent = total.toFixed(1);
-      $('#predikat').textContent = predikat(total);
-      $('#summaryBox').style.borderColor = total >= 85 ? '#bbf7d0' : '#fde68a';
-      $('#summaryBox').style.background = total >= 85 ? '#f0fdf4' : '#fffbeb';
-    }
+    // ====== Nilai & predikat ======
     function predikat(n){
       if(n>=90) return 'A';
       if(n>=85) return 'A-';
@@ -257,10 +216,51 @@
       if(n>=60) return 'C';
       return 'D';
     }
+    function setRingkasan(final){
+      const box = $('#summaryBox');
+      const ok = final >= 85;
+      box.style.borderColor = ok ? 'var(--ok)'   : 'var(--warn)';
+      box.style.background  = ok ? 'var(--okBg)' : 'var(--warnBg)';
+      $('#nilaiAkhir').textContent = final.toFixed(2);
+      $('#predikat').textContent = predikat(final);
+    }
 
-    // ====== Mushaf controls ======
+    // ====== Mushaf controls & data ======
     const fontSlider = $('#fontScale');
     const mushafArea = $('#mushafArea');
+
+    // Tap scoring
+    const TAP_PENALTY = { green:0.25, yellow:0.5, red:1.0 };
+    // key "s:a" → { color, penalty }
+    let ayahMarks = {};
+    function keySA(s,a){ return `${s}:${a}`; }
+
+    function cycleMark(span){
+      // siklus: none -> green -> yellow -> red -> none
+      const s = Number(span.dataset.surah), a = Number(span.dataset.ayah);
+      const key = keySA(s,a);
+      const cur = ayahMarks[key]?.color || null;
+
+      span.classList.remove('mark-green','mark-yellow','mark-red');
+      let next = null;
+      if(!cur){ next = 'green'; span.classList.add('mark-green'); }
+      else if(cur==='green'){ next = 'yellow'; span.classList.add('mark-yellow'); }
+      else if(cur==='yellow'){ next = 'red'; span.classList.add('mark-red'); }
+      else { next = null; /* merah -> bersih */ }
+
+      if(next){ ayahMarks[key] = { color: next, penalty: TAP_PENALTY[next] }; }
+      else { delete ayahMarks[key]; }
+
+      hitungNilaiTap();
+    }
+
+    function hitungNilaiTap(){
+      let totalPenalty=0;
+      for(const k in ayahMarks){ totalPenalty += ayahMarks[k].penalty; }
+      let final = 100 - totalPenalty;
+      if(final<0) final=0;
+      setRingkasan(final);
+    }
 
     // --- Nama Surah (1..114) ---
     const SURAH_NAMES = [
@@ -302,12 +302,9 @@
       }).join('');
     }
 
-    function fillAyahSelect(sel, max){ const el=$(sel); el.innerHTML = makeOpts(max); }
+    function fillAyahSelect(sel, max){ const el=$(sel); el.innerHTML = makeOpts(Math.max(1, +max||1)); }
 
-    function fillPageSelect(){
-      const el = $('#pageSelect');
-      el.innerHTML = makeOpts(604); // 1..604
-    }
+    function fillPageSelect(){ $('#pageSelect').innerHTML = makeOpts(604); }
 
     // ====== Data prep ======
     function computeSurahMax(){
@@ -320,15 +317,12 @@
     }
 
     function buildPageIndex(){
-      // Buat indeks halaman → pasangan (surah, ayat) terurut
       for(const [key, page] of Object.entries(ayahPageMap)){
         const [s,a] = key.split(':').map(Number);
         if(!s || !a || !page) continue;
         (pageIndex[page] ||= []).push({surah:s, ayat:a});
       }
-      for(const p of Object.keys(pageIndex)){
-        pageIndex[p].sort(cmpPair);
-      }
+      for(const p of Object.keys(pageIndex)){ pageIndex[p].sort(cmpPair); }
     }
 
     async function loadQuran(){
@@ -350,6 +344,9 @@
         // default: Page 1
         $('#pageSelect').value = '1';
         applyPageSelection(1); // ini juga set Surah/Ayat dari & ke
+
+        // set nilai awal
+        setRingkasan(100);
       }catch(err){
         mushafArea.innerHTML = `<div class="muted">Gagal memuat data Qur'an. Periksa koneksi atau sumber data.</div>`;
         console.error(err);
@@ -367,11 +364,11 @@
       }catch(err){ console.warn('Gagal load font page', page, err); }
     }
 
-    async function renderMushafRange(){
+    const doRender = async ()=>{
       const sF = +$('#surahFrom').value || 1;
       const aF = +$('#ayahFrom').value || 1;
-      const sT = +$('#surahTo').value || sF;
-      const aT = +$('#ayahTo').value || aF;
+      const sT = +$('#surahTo').value   || sF;
+      const aT = +$('#ayahTo').value    || aF;
 
       // Kumpulkan ayat per halaman
       const halamanMap = {};
@@ -402,8 +399,17 @@
         halamanMap[page].forEach(item=>{
           const span = document.createElement('span');
           span.className = 'ayah';
-          span.dataset.ayah = String(item.ayat);
+          span.dataset.surah = String(item.surah);
+          span.dataset.ayah  = String(item.ayat);
           span.textContent = item.teks; // tanpa penomoran
+
+          // jika sebelumnya sudah ditandai, kembalikan kelasnya
+          const mark = ayahMarks[keySA(item.surah,item.ayat)];
+          if (mark?.color === 'green') span.classList.add('mark-green');
+          if (mark?.color === 'yellow') span.classList.add('mark-yellow');
+          if (mark?.color === 'red') span.classList.add('mark-red');
+
+          span.addEventListener('click', ()=>cycleMark(span));
           pageDiv.appendChild(span);
           pageDiv.appendChild(document.createTextNode(' '));
         });
@@ -418,10 +424,10 @@
       if(!pages.length){
         mushafArea.innerHTML = `<div class="muted">Tidak ada ayat pada rentang yang dipilih.</div>`;
       }
-    }
+    };
+    const renderMushafRange = debounce(doRender, 50);
 
     function setRange(sFrom, aFrom, sTo, aTo){
-      // Sesuaikan pilihan dan isi opsi ayat berdasarkan surah
       $('#surahFrom').value = String(sFrom);
       fillAyahSelect('#ayahFrom', surahMaxAyah[sFrom] || aFrom);
       $('#ayahFrom').value = String(aFrom);
@@ -469,26 +475,35 @@
     $('#ayahFrom').addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
     $('#ayahTo').addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
 
-    $('#pageSelect').addEventListener('change', ()=>{
-      const p = +$('#pageSelect').value || 1;
-      applyPageSelection(p);
-    });
+    $('#pageSelect').addEventListener('change', ()=>{ applyPageSelection(+$('#pageSelect').value || 1); });
 
     // start
     loadQuran();
 
     // ====== Aksi tombol ======
     $('#btnReset').addEventListener('click', ()=>{
-      document.querySelector('#formPanel form')?.reset?.();
-      ['rTajwid','rMakharij','rLancar','rTartil','rAdab'].forEach(id=>{ const el=$('#'+id); if(el){ el.value=80; el.dispatchEvent(new Event('input')); }});
+      $('#penilaianForm')?.reset?.();
       $('#catatan').value='';
-
+      // bersihkan marks
+      ayahMarks = {};
+      $$('.ayah').forEach(el=> el.classList.remove('mark-green','mark-yellow','mark-red'));
       // reset ke Page 1
       $('#pageSelect').value='1';
       applyPageSelection(1);
+      // nilai balik ke 100
+      setRingkasan(100);
     });
 
     $('#btnSimpan').addEventListener('click', ()=>{
+      // hitung terakhir (jika ada perubahan yang belum tersave)
+      hitungNilaiTap();
+
+      // siapkan payload
+      const marks = Object.entries(ayahMarks).map(([k,v])=>{
+        const [s,a]=k.split(':').map(Number);
+        return { surah:s, ayat:a, color:v.color, penalty:v.penalty };
+      }).sort((x,y)=> (x.surah-y.surah) || (x.ayat-y.ayat));
+
       const data = {
         identitas: {
           nama: $('#namaSantri').value.trim(),
@@ -504,22 +519,20 @@
           surahSampai: +$('#surahTo').value || (+$('#surahFrom').value || 1),
           ayatSampai: +$('#ayahTo').value || (+$('#ayahFrom').value || 1),
         },
-        nilai: {
-          tajwid: +$('#rTajwid').value || 0,
-          makharij: +$('#rMakharij').value || 0,
-          lancar: +$('#rLancar').value || 0,
-          tartil: +$('#rTartil').value || 0,
-          adab: +$('#rAdab').value || 0,
-          akhir: +$('#nilaiAkhir').textContent || 0,
-          predikat: $('#predikat').textContent,
+        penilaianTap: {
+          totalMinus: 100 - (+$('#nilaiAkhir').textContent || 100),
+          detail: marks
         },
+        nilaiAkhir: +$('#nilaiAkhir').textContent || 100,
+        predikat: $('#predikat').textContent,
         catatan: $('#catatan').value.trim(),
         dibuat: new Date().toISOString(),
       };
       console.log('[KERANGKA] Data penilaian:', data);
+
       const btn = $('#btnSimpan');
       btn.disabled = true; btn.textContent = 'Tersimpan (dummy)…';
-      setTimeout(()=>{ btn.disabled=false; btn.textContent='Simpan'; }, 1000);
+      setTimeout(()=>{ btn.disabled=false; btn.textContent='Simpan'; }, 800);
     });
 
     $('#btnUnduhPdf').addEventListener('click', ()=>{
