@@ -1,14 +1,10 @@
 [build]
-  publish   = "."                 # sajikan root repo
-  functions = "netlify/functions" # folder functions
+  functions = "netlify/functions"
+  publish   = "."
 
 [functions]
   node_bundler = "esbuild"
 
-[build.environment]
-  NODE_VERSION = "18"
-
-# (opsional) CORS global
 [[headers]]
   for = "/*"
   [headers.values]
