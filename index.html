@@ -19,27 +19,22 @@
       background:linear-gradient(180deg,#fafbff, #f2f4fb 40%, #eef1f9);
     }
 
-    /* ====== AUTH (Login Card) ====== */
-    .auth-wrap{
-      min-height:100vh; display:grid; place-items:center; padding:24px;
-    }
-    .card{
-      width:100%; max-width:380px; background:var(--card); border:1px solid var(--soft);
-      border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.05); padding:22px;
-    }
+    /* ====== LOGIN CARD (A57 IDs) ====== */
+    .auth-wrap{min-height:100vh; display:grid; place-items:center; padding:24px;}
+    .card{width:100%; max-width:420px; background:var(--card); border:1px solid var(--soft);
+      border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.05); padding:22px;}
     .card h1{margin:0 0 4px; font-size:22px}
     .card p{margin:0 0 16px; color:var(--muted); font-size:13px}
     .form-row{display:grid; gap:10px; margin:14px 0}
-    .form-row label{font-size:13px}
-    .input{
-      width:100%; padding:11px 12px; border:1px solid var(--soft); border-radius:10px; background:#fff; font:inherit;
-    }
+    .input{width:100%; padding:11px 12px; border:1px solid var(--soft); border-radius:10px; background:#fff; font:inherit;}
+    .password-group{display:flex; align-items:center; gap:8px}
+    .toggle-password{cursor:pointer; user-select:none}
     .btn{appearance:none; border:1px solid var(--soft); background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; font:inherit}
     .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff; width:100%}
+    #login-error{color:#b91c1c; font-size:12px; margin-top:6px; display:none}
     .hint{font-size:12px; color:var(--muted); margin-top:8px}
-    .err{color:#b91c1c; font-size:12px; margin-top:6px; min-height:16px}
 
-    /* ====== APP (Dashboard) ====== */
+    /* ====== DASHBOARD ====== */
     .topbar{
       position:sticky; top:0; z-index:10; display:flex; gap:10px; align-items:center; justify-content:space-between;
       padding:10px 12px; background:var(--card); border-bottom:1px solid var(--soft);
@@ -54,11 +49,7 @@
     #formPanel{grid-area:form}
     #mushafPanel{grid-area:mushaf}
 
-    .panel{
-      background:var(--card); border:1px solid var(--soft); border-radius:14px;
-      box-shadow: 0 1px 2px rgba(0,0,0,.04);
-      overflow:auto;
-    }
+    .panel{background:var(--card); border:1px solid var(--soft); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,.04); overflow:auto;}
     .panel .inner{padding:16px}
     .section{margin-bottom:16px}
     .section h3{margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
@@ -74,10 +65,8 @@
     .rubric-score output{display:inline-block; min-width:40px; text-align:right; font-variant-numeric: tabular-nums}
     input[type="range"]{width:100%}
 
-    .summary{
-      display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; padding:12px; border:1px solid var(--soft); border-radius:12px; background:#fafafa;
-      transition:border-color .2s, background .2s;
-    }
+    .summary{display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; padding:12px; border:1px solid var(--soft); border-radius:12px; background:#fafafa;
+      transition:border-color .2s, background .2s;}
     .summary .big{font-size:28px; font-weight:700}
     .badge{display:inline-block; padding:4px 10px; border-radius:999px; background:#eef6ff; color:#0b63d1; font-weight:600}
 
@@ -85,15 +74,11 @@
     .btn.ghost{background:transparent}
     .btn:focus{outline:3px solid var(--ring); outline-offset:2px}
 
-    .mushaf-header{
-      position:sticky; top:0; z-index:5; background:var(--card);
-      border-bottom:1px solid var(--soft); padding:10px 12px;
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap
-    }
+    .mushaf-header{position:sticky; top:0; z-index:5; background:var(--card);
+      border-bottom:1px solid var(--soft); padding:10px 12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
     .mushaf-area{padding:18px; line-height:2.1; font-size:26px; direction:rtl; text-align:justify; font-family: "Traditional Arabic", "Amiri", serif}
     .ayah{padding:2px 6px; border-radius:6px; display:inline}
-    .ayah.hl{background:var(--hl)}
-    .ayah.hl2{background:var(--hl2)}
+    .ayah.hl{background:var(--hl)} .ayah.hl2{background:var(--hl2)}
     .muted{color:var(--muted)}
 
     @media (max-width: 920px){
@@ -104,36 +89,37 @@
 </head>
 <body>
 
-  <!-- ====== LOGIN CARD ====== -->
-  <div class="auth-wrap" id="authWrap">
+  <!-- ====== LOGIN (A57) ====== -->
+  <div class="auth-wrap" id="login-card">
     <div class="card">
       <h1>Portal Penilaian</h1>
       <p>Masuk untuk mengakses dashboard Lembar Penilaian.</p>
 
-      <form id="loginForm" onsubmit="return false;">
+      <form id="login-form" onsubmit="return false;">
         <div class="form-row">
           <label>Username</label>
-          <input class="input" id="loginUser" placeholder="ustadz / atau NIS (mis. 552233)" autocomplete="username" />
+          <input class="input" id="username" placeholder="ustadz / atau NIS (mis. 552233)" autocomplete="username" />
         </div>
         <div class="form-row">
           <label>Password</label>
-          <input class="input" id="loginPass" type="password" placeholder="••••••" autocomplete="current-password" />
+          <div class="password-group">
+            <input class="input" id="password" type="password" placeholder="••••••" autocomplete="current-password" />
+            <span id="toggle-password" class="toggle-password">👁</span>
+          </div>
         </div>
-        <button class="btn primary" id="btnLogin">Masuk</button>
-        <div class="err" id="loginErr"></div>
-        <div class="hint">
-          Demo: <b>ustadz</b> / <b>123456</b> • Atau pakai NIS (≥5 digit) dengan password yang sama.
-        </div>
+        <button class="btn primary" id="btn-login" type="submit">Masuk</button>
+        <div id="login-error"></div>
+        <div class="hint">Gunakan akun yang ada di <code>user.json</code> (repo private). Untuk santri tanpa password, gunakan NIS sebagai password.</div>
       </form>
     </div>
   </div>
 
-  <!-- ====== APP (DASHBOARD) ====== -->
-  <div id="app" hidden>
+  <!-- ====== DASHBOARD (A57) ====== -->
+  <div id="dashboard-card" style="display:none;">
     <div class="topbar">
-      <div class="userchip" id="chipUser">–</div>
+      <div class="userchip">Masuk sebagai: <b><span id="namaUser">–</span></b></div>
       <div style="display:flex; gap:8px; align-items:center">
-        <button class="btn" id="btnLogout" type="button">Logout</button>
+        <button class="btn" id="logout-btn" type="button">Keluar</button>
       </div>
     </div>
 
@@ -142,7 +128,6 @@
       <section class="panel" id="formPanel" aria-label="Form Penilaian">
         <div class="inner">
           <form id="penilaianForm" onsubmit="return false;">
-            <!-- Identitas -->
             <div class="section">
               <h3>Identitas</h3>
               <div class="grid-2">
@@ -166,7 +151,6 @@
               </label>
             </div>
 
-            <!-- Aspek Penilaian -->
             <div class="section">
               <h3>Aspek Penilaian</h3>
               <div class="rubric-row">
@@ -196,13 +180,11 @@
               </div>
             </div>
 
-            <!-- Catatan -->
             <div class="section">
               <h3>Catatan</h3>
               <textarea id="catatan" placeholder="Catatan penguji… (lafaz perlu ditekan, mad iwad, idgham, dsb.)"></textarea>
             </div>
 
-            <!-- Ringkasan & Aksi -->
             <div class="section">
               <div class="summary" id="summaryBox" aria-live="polite">
                 <div>
@@ -215,6 +197,7 @@
                 </div>
               </div>
             </div>
+
             <div class="actions">
               <button class="btn primary" id="btnSimpan" type="button">Simpan</button>
               <button class="btn" id="btnUnduhPdf" type="button">Unduh PDF (Coming Soon)</button>
@@ -255,78 +238,90 @@
 
   <script>
     /* =========================
-       AUTH MODULE (saling mengikat)
+       UTIL
        ========================= */
-    const AUTH_KEY = 'mtq_session_v1';
     const $  = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+    const AUTH_TOKEN_KEY = 'mtq_token';
+    const AUTH_SESSION_KEY = 'mtq_session';
 
-    function setSession(s){ localStorage.setItem(AUTH_KEY, JSON.stringify(s)); }
-    function getSession(){ try{ return JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }catch{ return null; } }
-    function clearSession(){ localStorage.removeItem(AUTH_KEY); }
+    function setSession(session, token){
+      if (session) localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      if (token)   localStorage.setItem(AUTH_TOKEN_KEY, token);
+    }
+    function getSession(){ try{ return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY)||'null'); }catch{ return null; } }
+    function getToken(){ return localStorage.getItem(AUTH_TOKEN_KEY)||''; }
+    function clearSession(){ localStorage.removeItem(AUTH_TOKEN_KEY); localStorage.removeItem(AUTH_SESSION_KEY); }
 
-    // Validasi kredensial:
-    // - Admin: ustadz / 123456
-    // - Santri: NIS (≥5 digit) & password sama dengan NIS
-    function checkCredential(u, p){
-      const user = String(u||'').trim();
-      const pass = String(p||'').trim();
-      if (user === 'ustadz' && pass === '123456') {
-        return { role:'admin', user:'ustadz', name:'Ustadz', nis:null };
-      }
-      if (/^\d{5,}$/.test(user) && pass === user) {
-        return { role:'santri', user:user, name:`NIS ${user}`, nis:user };
-      }
-      return null;
+    /* =========================
+       LOGIN (A57 IDs)
+       ========================= */
+    const loginCard  = $('#login-card');
+    const dashCard   = $('#dashboard-card');
+    const loginForm  = $('#login-form');
+    const usernameEl = $('#username');
+    const passwordEl = $('#password');
+    const loginErr   = $('#login-error');
+    const namaUserEl = $('#namaUser');
+    const logoutBtn  = $('#logout-btn');
+
+    // Toggle 👁
+    $('#toggle-password')?.addEventListener('click', ()=>{
+      const type = passwordEl.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordEl.setAttribute('type', type);
+    });
+
+    async function doLogin(username, password){
+      const r = await fetch('/.netlify/functions/auth-login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.error || 'Login gagal');
+      return j; // { ok, token, session }
     }
 
-    function updateUserChip(){
-      const s = getSession();
-      $('#chipUser').textContent = s ? `${s.name} • ${s.role}` : '–';
-    }
-
-    function showLogin(){
-      $('#authWrap').hidden = false;
-      $('#app').hidden = true;
-    }
-    function showApp(){
-      $('#authWrap').hidden = true;
-      $('#app').hidden = false;
-      updateUserChip();
-      // bind akses NIS ke form (jika santri)
-      const s = getSession();
+    function showDashboard(session){
+      loginCard.style.display = 'none';
+      dashCard.style.display  = 'block';
+      namaUserEl.textContent  = session?.name || session?.username || 'Pengguna';
+      // Lock NIS jika santri
       const nisEl = $('#nisSantri');
-      if (s?.role === 'santri' && s?.nis) {
-        nisEl.value = s.nis;
+      if (session?.role === 'santri' && session?.nis) {
+        nisEl.value = session.nis;
         nisEl.setAttribute('readonly','readonly');
       } else {
         nisEl.removeAttribute('readonly');
       }
-      // Lazy-load dashboard (sekali saja)
-      if (!window.__APP_LOADED__) {
-        window.__APP_LOADED__ = true;
-        loadQuran();  // dashboard bootstrap
-      }
+      // Bootstrap dashboard (sekali)
+      if (!window.__APP_LOADED__) { window.__APP_LOADED__ = true; loadQuran(); initRanges(); initFontScale(); hitungNilaiAkhir(); }
+    }
+    function showLogin(){
+      dashCard.style.display  = 'none';
+      loginCard.style.display = 'grid';
+      loginErr.style.display = 'none';
+      loginErr.textContent = '';
+      passwordEl.value = '';
     }
 
-    // Login submit
-    $('#btnLogin').addEventListener('click', ()=>{
-      const u = $('#loginUser').value;
-      const p = $('#loginPass').value;
-      const ok = checkCredential(u,p);
-      const err = $('#loginErr');
-      if (!ok) {
-        err.textContent = 'Username atau password salah.';
-        return;
+    // Submit login
+    loginForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const u = (usernameEl.value||'').trim();
+      const p = (passwordEl.value||'').trim();
+      loginErr.style.display='none'; loginErr.textContent='';
+      try{
+        const { token, session } = await doLogin(u,p);
+        setSession(session, token);
+        showDashboard(session);
+      }catch(err){
+        loginErr.style.display='block';
+        loginErr.textContent = err.message || 'Login gagal';
       }
-      err.textContent = '';
-      setSession(ok);
-      $('#loginPass').value = '';
-      showApp();
     });
 
     // Logout
-    $('#btnLogout').addEventListener('click', ()=>{
+    logoutBtn.addEventListener('click', ()=>{
       clearSession();
       showLogin();
     });
@@ -334,19 +329,13 @@
     // Boot
     (function boot(){
       const s = getSession();
-      if (s) { showApp(); } else { showLogin(); }
+      if (s) showDashboard(s); else showLogin();
     })();
 
     /* =========================
-       DASHBOARD MODULE (dari versi kamu)
-       – fungsi saling mengikat:
-         page ↔ (surah,ayat) ↔ render ↔ fontScale, dll
+       DASHBOARD (Penilaian + Mushaf)
        ========================= */
-
-    // ====== Konfigurasi rubrik (bobot) ======
     const BOBOT = { tajwid: 0.30, makharij: 0.25, lancar: 0.25, tartil: 0.15, adab: 0.05 };
-
-    // Util dashboard
     const cmpPair = (p, q) => (p.surah - q.surah) || (p.ayat - q.ayat);
     const debounce = (fn, wait=60) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
 
@@ -356,14 +345,15 @@
       const fn = ()=>{ out.value = Number(el.value).toFixed(0); hitungNilaiAkhir(); };
       el.addEventListener('input', fn); fn();
     }
-
+    function initRanges(){
+      bindRange('rTajwid','oTajwid'); bindRange('rMakharij','oMakharij');
+      bindRange('rLancar','oLancar'); bindRange('rTartil','oTartil'); bindRange('rAdab','oAdab');
+    }
     function hitungNilaiAkhir(){
       const v = {
-        tajwid: +$('#rTajwid').value || 0,
-        makharij: +$('#rMakharij').value || 0,
-        lancar: +$('#rLancar').value || 0,
-        tartil: +$('#rTartil').value || 0,
-        adab: +$('#rAdab').value || 0,
+        tajwid: +$('#rTajwid').value || 0,  makharij: +$('#rMakharij').value || 0,
+        lancar: +$('#rLancar').value || 0,  tartil:   +$('#rTartil').value   || 0,
+        adab:   +$('#rAdab').value   || 0,
       };
       const total = v.tajwid*BOBOT.tajwid + v.makharij*BOBOT.makharij + v.lancar*BOBOT.lancar + v.tartil*BOBOT.tartil + v.adab*BOBOT.adab;
       $('#nilaiAkhir').textContent = total.toFixed(1);
@@ -383,7 +373,7 @@
       return 'D';
     }
 
-    // ====== Mushaf controls ======
+    // Mushaf
     const fontSlider = document.getElementById('fontScale');
     const mushafArea = document.getElementById('mushafArea');
 
@@ -407,11 +397,11 @@
       pageMap: 'https://raw.githubusercontent.com/dickymiswardi/tadabbur/main/ayah_page_map.json'
     };
 
-    let quranData = {};          // "s:a" → teks
-    let ayahPageMap = {};        // "s:a" → nomor halaman (1..604)
-    const surahMaxAyah = {};     // computed
+    let quranData = {};
+    let ayahPageMap = {};
+    const surahMaxAyah = {};
     const fontLoadedPages = new Set();
-    const pageIndex = {};        // page → [{surah, ayat}]
+    const pageIndex = {};
     let lastRenderedRange = null;
 
     function makeOpts(n){ return Array.from({length:n}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''); }
@@ -459,18 +449,8 @@
         fillAyahSelect('#ayahFrom', surahMaxAyah[1]||7);
         fillAyahSelect('#ayahTo',   surahMaxAyah[1]||7);
 
-        // Default page 1
         $('#pageSelect').value = '1';
         applyPageSelection(1);
-
-        // Inisialisasi slider + ringkasan
-        bindRange('rTajwid','oTajwid');
-        bindRange('rMakharij','oMakharij');
-        bindRange('rLancar','oLancar');
-        bindRange('rTartil','oTartil');
-        bindRange('rAdab','oAdab');
-        initFontScale();
-        hitungNilaiAkhir();
       }catch(err){
         mushafArea.innerHTML = `<div class="muted">Gagal memuat data Qur'an. Periksa koneksi atau sumber data.</div>`;
         console.error(err);
@@ -575,27 +555,25 @@
       if(which==='to') $('#ayahTo').value = String(max);
       guardRange(); renderMushafRange();
     }
-
     function initFontScale(){
       const saved = localStorage.getItem('fontScale');
       if (saved) $('#fontScale').value = String(Math.min(40, Math.max(20, +saved||26)));
       $('#mushafArea').style.fontSize = $('#fontScale').value+'px';
     }
 
-    // Bindings UI (dipanggil saat loadQuran selesai via showApp)
+    // Bind UI
     document.addEventListener('DOMContentLoaded', ()=>{
-      // font scale
       $('#fontScale')?.addEventListener('input', ()=>{
         localStorage.setItem('fontScale', String($('#fontScale').value));
         renderMushafRange();
       });
-      // sinkronisasi dropdown
       $('#surahFrom')?.addEventListener('change', ()=>onChangeSurah('from'));
       $('#surahTo')?.addEventListener('change', ()=>onChangeSurah('to'));
       $('#ayahFrom')?.addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
       $('#ayahTo')?.addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
       $('#pageSelect')?.addEventListener('change', ()=> applyPageSelection(+$('#pageSelect').value||1) );
-      // actions
+
+      // Reset
       $('#btnReset')?.addEventListener('click', ()=>{
         $('#penilaianForm')?.reset?.();
         ['rTajwid','rMakharij','rLancar','rTartil','rAdab'].forEach(id=>{
@@ -605,10 +583,12 @@
         $('#pageSelect').value='1';
         applyPageSelection(1);
       });
-      $('#btnSimpan')?.addEventListener('click', ()=>{
-        const sess = getSession();
+
+      // Simpan ke Netlify Function (repo private)
+      $('#btnSimpan')?.addEventListener('click', async ()=>{
+        const session = getSession();
         const data = {
-          session: sess,
+          session,
           identitas: {
             nama: $('#namaSantri').value.trim(),
             nis: $('#nisSantri').value.trim(),
@@ -635,11 +615,31 @@
           catatan: $('#catatan')?.value.trim() || '',
           dibuat: new Date().toISOString(),
         };
-        console.log('[KERANGKA] Data penilaian:', data);
+
         const btn = $('#btnSimpan');
-        btn.disabled = true; btn.textContent = 'Tersimpan (dummy)…';
-        setTimeout(()=>{ btn.disabled=false; btn.textContent='Simpan'; }, 800);
+        btn.disabled = true; const oldText = btn.textContent; btn.textContent = 'Menyimpan…';
+
+        try{
+          const r = await fetch('/.netlify/functions/save-penilaian', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(data)
+          });
+          const j = await r.json();
+          if (!r.ok || !j.ok) throw new Error(j.error || 'Gagal menyimpan');
+          btn.textContent = 'Tersimpan ✓';
+          setTimeout(()=>{ btn.disabled=false; btn.textContent=oldText; }, 900);
+          console.log('Tersimpan ke:', j.path);
+        }catch(err){
+          alert('Gagal menyimpan: ' + (err.message||err));
+          btn.disabled=false; btn.textContent=oldText;
+        }
       });
+
+      // Placeholder PDF
       $('#btnUnduhPdf')?.addEventListener('click', ()=> alert('Export PDF masih placeholder. Nanti bisa pakai jsPDF atau html2canvas.') );
     });
   </script>
