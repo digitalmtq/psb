@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lembar Penilaian – Login + Dashboard</title>
+  <title>Lembar Penilaian – Login + Dashboard (Clonning Asli)</title>
   <style>
     :root{
       --bg:#f6f7fb; --card:#ffffff; --ink:#1f2937; --muted:#6b7280;
@@ -19,7 +19,7 @@
       background:linear-gradient(180deg,#fafbff, #f2f4fb 40%, #eef1f9);
     }
 
-    /* ====== LOGIN CARD (A57 IDs) ====== */
+    /* ====== LOGIN CARD ====== */
     .auth-wrap{min-height:100vh; display:grid; place-items:center; padding:24px;}
     .card{width:100%; max-width:420px; background:var(--card); border:1px solid var(--soft);
       border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.05); padding:22px;}
@@ -34,7 +34,7 @@
     #login-error{color:#b91c1c; font-size:12px; margin-top:6px; display:none}
     .hint{font-size:12px; color:var(--muted); margin-top:8px}
 
-    /* ====== DASHBOARD ====== */
+    /* ====== DASHBOARD (tersedia, tapi tidak dipanggil dari login) ====== */
     .topbar{
       position:sticky; top:0; z-index:10; display:flex; gap:10px; align-items:center; justify-content:space-between;
       padding:10px 12px; background:var(--card); border-bottom:1px solid var(--soft);
@@ -89,7 +89,7 @@
 </head>
 <body>
 
-  <!-- ====== LOGIN (A57) ====== -->
+  <!-- ====== LOGIN ====== -->
   <div class="auth-wrap" id="login-card">
     <div class="card">
       <h1>Portal Penilaian</h1>
@@ -104,17 +104,17 @@
           <label>Password</label>
           <div class="password-group">
             <input class="input" id="password" type="password" placeholder="••••••" autocomplete="current-password" />
-            <span id="toggle-password" class="toggle-password">👁</span>
+            <span id="toggle-password" class="toggle-password" title="Tampilkan/sembunyikan password">👁</span>
           </div>
         </div>
         <button class="btn primary" id="btn-login" type="submit">Masuk</button>
         <div id="login-error"></div>
-        <div class="hint">Gunakan akun yang ada di <code>user.json</code> (repo private). Untuk santri tanpa password, gunakan NIS sebagai password.</div>
+        <div class="hint">Versi ini meniru A57.html: submit **tidak** membuka dashboard — hanya <code>console.log</code>.</div>
       </form>
     </div>
   </div>
 
-  <!-- ====== DASHBOARD (A57) ====== -->
+  <!-- ====== DASHBOARD (tidak dipanggil oleh login handler) ====== -->
   <div id="dashboard-card" style="display:none;">
     <div class="topbar">
       <div class="userchip">Masuk sebagai: <b><span id="namaUser">–</span></b></div>
@@ -242,19 +242,21 @@
        ========================= */
     const $  = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
-    const AUTH_TOKEN_KEY = 'mtq_token';
-    const AUTH_SESSION_KEY = 'mtq_session';
 
-    function setSession(session, token){
-      if (session) localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      if (token)   localStorage.setItem(AUTH_TOKEN_KEY, token);
+    // Predikat → huruf
+    function predikat(n){
+      if(n>=90) return 'A';
+      if(n>=85) return 'A-';
+      if(n>=80) return 'B+';
+      if(n>=75) return 'B';
+      if(n>=70) return 'B-';
+      if(n>=65) return 'C+';
+      if(n>=60) return 'C';
+      return 'D';
     }
-    function getSession(){ try{ return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY)||'null'); }catch{ return null; } }
-    function getToken(){ return localStorage.getItem(AUTH_TOKEN_KEY)||''; }
-    function clearSession(){ localStorage.removeItem(AUTH_TOKEN_KEY); localStorage.removeItem(AUTH_SESSION_KEY); }
 
     /* =========================
-       LOGIN (A57 IDs)
+       LOGIN (ASLI A57: hanya console.log, tidak buka dashboard)
        ========================= */
     const loginCard  = $('#login-card');
     const dashCard   = $('#dashboard-card');
@@ -262,78 +264,30 @@
     const usernameEl = $('#username');
     const passwordEl = $('#password');
     const loginErr   = $('#login-error');
-    const namaUserEl = $('#namaUser');
-    const logoutBtn  = $('#logout-btn');
 
-    // Toggle 👁
+    // toggle password 👁
     $('#toggle-password')?.addEventListener('click', ()=>{
       const type = passwordEl.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordEl.setAttribute('type', type);
     });
 
-    async function doLogin(username, password){
-      const r = await fetch('/.netlify/functions/auth-login', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ username, password })
-      });
-      const j = await r.json();
-      if (!r.ok || !j.ok) throw new Error(j.error || 'Login gagal');
-      return j; // { ok, token, session }
-    }
-
-    function showDashboard(session){
-      loginCard.style.display = 'none';
-      dashCard.style.display  = 'block';
-      namaUserEl.textContent  = session?.name || session?.username || 'Pengguna';
-      // Lock NIS jika santri
-      const nisEl = $('#nisSantri');
-      if (session?.role === 'santri' && session?.nis) {
-        nisEl.value = session.nis;
-        nisEl.setAttribute('readonly','readonly');
-      } else {
-        nisEl.removeAttribute('readonly');
-      }
-      // Bootstrap dashboard (sekali)
-      if (!window.__APP_LOADED__) { window.__APP_LOADED__ = true; loadQuran(); initRanges(); initFontScale(); hitungNilaiAkhir(); }
-    }
-    function showLogin(){
-      dashCard.style.display  = 'none';
-      loginCard.style.display = 'grid';
-      loginErr.style.display = 'none';
-      loginErr.textContent = '';
-      passwordEl.value = '';
-    }
-
-    // Submit login
-    loginForm.addEventListener('submit', async (e)=>{
+    // Handler login: benar-benar seperti A57 → hanya log, tidak menampilkan dashboard
+    loginForm.addEventListener('submit', (e)=>{
       e.preventDefault();
       const u = (usernameEl.value||'').trim();
       const p = (passwordEl.value||'').trim();
-      loginErr.style.display='none'; loginErr.textContent='';
-      try{
-        const { token, session } = await doLogin(u,p);
-        setSession(session, token);
-        showDashboard(session);
-      }catch(err){
-        loginErr.style.display='block';
-        loginErr.textContent = err.message || 'Login gagal';
-      }
+      console.log('Login:', u, p); // A57 original behavior
+      // Tidak ada aksi lain. Tetap di halaman login.
     });
 
-    // Logout
-    logoutBtn.addEventListener('click', ()=>{
-      clearSession();
-      showLogin();
-    });
-
-    // Boot
+    // Boot: selalu tampilkan login
     (function boot(){
-      const s = getSession();
-      if (s) showDashboard(s); else showLogin();
+      loginCard.style.display = 'grid';
+      dashCard.style.display  = 'none';
     })();
 
     /* =========================
-       DASHBOARD (Penilaian + Mushaf)
+       DASHBOARD (Penilaian + Mushaf) – tersedia jika nanti ingin diaktifkan
        ========================= */
     const BOBOT = { tajwid: 0.30, makharij: 0.25, lancar: 0.25, tartil: 0.15, adab: 0.05 };
     const cmpPair = (p, q) => (p.surah - q.surah) || (p.ayat - q.ayat);
@@ -362,16 +316,6 @@
       $('#summaryBox').style.borderColor = ok ? 'var(--ok)' : 'var(--warn)';
       $('#summaryBox').style.background  = ok ? 'var(--okBg)' : 'var(--warnBg)';
     }
-    function predikat(n){
-      if(n>=90) return 'A';
-      if(n>=85) return 'A-';
-      if(n>=80) return 'B+';
-      if(n>=75) return 'B';
-      if(n>=70) return 'B-';
-      if(n>=65) return 'C+';
-      if(n>=60) return 'C';
-      return 'D';
-    }
 
     // Mushaf
     const fontSlider = document.getElementById('fontScale');
@@ -387,7 +331,7 @@
       "As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij",
       "Nuh","Al-Jinn","Al-Muzzammil","Al-Muddaththir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba'","An-Nazi'at","'Abasa",
       "At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad",
-      "Ash-Shams","Al-Layl","Ad-Duha","Ash-Sharh","At-Tin","Al-'Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-'Adiyat",
+      "Ash-Shams","Al-Layl","Ad-Duha","Al-Sharh","At-Tin","Al-'Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-'Adiyat",
       "Al-Qari'ah","At-Takathur","Al-'Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr",
       "Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"
     ];
@@ -452,6 +396,7 @@
         $('#pageSelect').value = '1';
         applyPageSelection(1);
       }catch(err){
+        const mushafArea = document.getElementById('mushafArea');
         mushafArea.innerHTML = `<div class="muted">Gagal memuat data Qur'an. Periksa koneksi atau sumber data.</div>`;
         console.error(err);
       }
@@ -489,6 +434,7 @@
         }
       }
 
+      const mushafArea = document.getElementById('mushafArea');
       mushafArea.innerHTML = '';
       const pages = Object.keys(halamanMap).map(Number).sort((x,y)=>x-y);
       for(const page of pages){
@@ -496,7 +442,7 @@
         const pageStr = String(page).padStart(3,'0');
         const pageDiv = document.createElement('div');
         pageDiv.style.fontFamily = `QCF_P${pageStr}, serif`;
-        pageDiv.style.fontSize   = (parseInt(fontSlider?.value||'26',10))+'px';
+        pageDiv.style.fontSize   = (parseInt(document.getElementById('fontScale')?.value||'26',10))+'px';
         pageDiv.style.lineHeight = '2.2';
         pageDiv.style.direction  = 'rtl';
         pageDiv.style.marginBottom = '20px';
@@ -514,22 +460,23 @@
         });
         mushafArea.appendChild(pageDiv);
       }
-      if(pages.length === 1){ $('#pageSelect').value = String(pages[0]); }
+      if(pages.length === 1){ document.getElementById('pageSelect').value = String(pages[0]); }
       if(!pages.length){ mushafArea.innerHTML = `<div class="muted">Tidak ada ayat pada rentang yang dipilih.</div>`; }
     };
     const renderMushafRange = debounce(doRenderMushafRange, 60);
 
     function setRange(sFrom, aFrom, sTo, aTo){
-      $('#surahFrom').value = String(sFrom);
+      document.getElementById('surahFrom').value = String(sFrom);
       fillAyahSelect('#ayahFrom', surahMaxAyah[sFrom] || aFrom);
-      $('#ayahFrom').value = String(aFrom);
+      document.getElementById('ayahFrom').value = String(aFrom);
 
-      $('#surahTo').value = String(sTo);
+      document.getElementById('surahTo').value = String(sTo);
       fillAyahSelect('#ayahTo', surahMaxAyah[sTo] || aTo);
-      $('#ayahTo').value = String(aTo);
+      document.getElementById('ayahTo').value = String(aTo);
     }
     function applyPageSelection(page){
       const arr = pageIndex[page] || [];
+      const mushafArea = document.getElementById('mushafArea');
       if(!arr.length){
         mushafArea.innerHTML = `<div class="muted">Halaman ${page} tidak memiliki data.</div>`;
         return;
@@ -540,108 +487,92 @@
       renderMushafRange();
     }
     function guardRange(){
-      const sF=+$('#surahFrom').value, aF=+$('#ayahFrom').value;
-      let sT=+$('#surahTo').value,   aT=+$('#ayahTo').value;
+      const sF=+document.getElementById('surahFrom').value, aF=+document.getElementById('ayahFrom').value;
+      let sT=+document.getElementById('surahTo').value,   aT=+document.getElementById('ayahTo').value;
       if(sT<sF || (sT===sF && aT<aF)){
-        $('#surahTo').value=String(sF);
+        document.getElementById('surahTo').value=String(sF);
         fillAyahSelect('#ayahTo', surahMaxAyah[sF]||aF);
-        $('#ayahTo').value=String(aF);
+        document.getElementById('ayahTo').value=String(aF);
       }
     }
     function onChangeSurah(which){
-      const s = +(which==='from' ? $('#surahFrom').value : $('#surahTo').value) || 1;
+      const s = +(which==='from' ? document.getElementById('surahFrom').value : document.getElementById('surahTo').value) || 1;
       const max = surahMaxAyah[s] || 300;
       fillAyahSelect(which==='from' ? '#ayahFrom' : '#ayahTo', max);
-      if(which==='to') $('#ayahTo').value = String(max);
+      if(which==='to') document.getElementById('ayahTo').value = String(max);
       guardRange(); renderMushafRange();
     }
     function initFontScale(){
       const saved = localStorage.getItem('fontScale');
-      if (saved) $('#fontScale').value = String(Math.min(40, Math.max(20, +saved||26)));
-      $('#mushafArea').style.fontSize = $('#fontScale').value+'px';
+      if (saved) document.getElementById('fontScale').value = String(Math.min(40, Math.max(20, +saved||26)));
+      document.getElementById('mushafArea').style.fontSize = document.getElementById('fontScale').value+'px';
     }
 
-    // Bind UI
+    // Bind UI (kalau nanti dashboard mau dipakai, panggil bootDashboard() manual)
     document.addEventListener('DOMContentLoaded', ()=>{
-      $('#fontScale')?.addEventListener('input', ()=>{
-        localStorage.setItem('fontScale', String($('#fontScale').value));
+      document.getElementById('fontScale')?.addEventListener('input', ()=>{
+        localStorage.setItem('fontScale', String(document.getElementById('fontScale').value));
         renderMushafRange();
       });
-      $('#surahFrom')?.addEventListener('change', ()=>onChangeSurah('from'));
-      $('#surahTo')?.addEventListener('change', ()=>onChangeSurah('to'));
-      $('#ayahFrom')?.addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
-      $('#ayahTo')?.addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
-      $('#pageSelect')?.addEventListener('change', ()=> applyPageSelection(+$('#pageSelect').value||1) );
+      document.getElementById('surahFrom')?.addEventListener('change', ()=>onChangeSurah('from'));
+      document.getElementById('surahTo')?.addEventListener('change', ()=>onChangeSurah('to'));
+      document.getElementById('ayahFrom')?.addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
+      document.getElementById('ayahTo')?.addEventListener('change', ()=>{ guardRange(); renderMushafRange(); });
+      document.getElementById('pageSelect')?.addEventListener('change', ()=> applyPageSelection(+document.getElementById('pageSelect').value||1) );
 
       // Reset
-      $('#btnReset')?.addEventListener('click', ()=>{
-        $('#penilaianForm')?.reset?.();
+      document.getElementById('btnReset')?.addEventListener('click', ()=>{
+        document.getElementById('penilaianForm')?.reset?.();
         ['rTajwid','rMakharij','rLancar','rTartil','rAdab'].forEach(id=>{
-          const el=$('#'+id); if(el){ el.value=80; el.dispatchEvent(new Event('input')); }
+          const el=document.getElementById(id); if(el){ el.value=80; el.dispatchEvent(new Event('input')); }
         });
-        $('#catatan').value='';
-        $('#pageSelect').value='1';
+        document.getElementById('catatan').value='';
+        document.getElementById('pageSelect').value='1';
         applyPageSelection(1);
       });
 
-      // Simpan ke Netlify Function (repo private)
-      $('#btnSimpan')?.addEventListener('click', async ()=>{
-        const session = getSession();
-        const data = {
-          session,
+      // Simpan (dummy)
+      document.getElementById('btnSimpan')?.addEventListener('click', ()=>{
+        const d = {
           identitas: {
-            nama: $('#namaSantri').value.trim(),
-            nis: $('#nisSantri').value.trim(),
-            kelas: $('#kelasSantri').value.trim(),
-            tanggal: $('#tanggal').value,
-            penguji: $('#penguji').value.trim(),
+            nama: document.getElementById('namaSantri').value.trim(),
+            nis: document.getElementById('nisSantri').value.trim(),
+            kelas: document.getElementById('kelasSantri').value.trim(),
+            tanggal: document.getElementById('tanggal').value,
+            penguji: document.getElementById('penguji').value.trim(),
           },
           bacaan: {
-            page: +($('#pageSelect')?.value||'') || null,
-            surahDari: +($('#surahFrom')?.value||'') || 1,
-            ayatDari: +($('#ayahFrom')?.value||'') || 1,
-            surahSampai: +($('#surahTo')?.value||'') || (+($('#surahFrom')?.value||'') || 1),
-            ayatSampai: +($('#ayahTo')?.value||'') || (+($('#ayahFrom')?.value||'') || 1),
+            page: +(document.getElementById('pageSelect')?.value||'') || null,
+            surahDari: +(document.getElementById('surahFrom')?.value||'') || 1,
+            ayatDari: +(document.getElementById('ayahFrom')?.value||'') || 1,
+            surahSampai: +(document.getElementById('surahTo')?.value||'') || (+(document.getElementById('surahFrom')?.value||'') || 1),
+            ayatSampai: +(document.getElementById('ayahTo')?.value||'') || (+(document.getElementById('ayahFrom')?.value||'') || 1),
           },
           nilai: {
-            tajwid: +($('#rTajwid')?.value||'') || 0,
-            makharij: +($('#rMakharij')?.value||'') || 0,
-            lancar: +($('#rLancar')?.value||'') || 0,
-            tartil: +($('#rTartil')?.value||'') || 0,
-            adab: +($('#rAdab')?.value||'') || 0,
-            akhir: +($('#nilaiAkhir')?.textContent||'') || 0,
-            predikat: $('#predikat')?.textContent || '',
+            tajwid: +(document.getElementById('rTajwid')?.value||'') || 0,
+            makharij: +(document.getElementById('rMakharij')?.value||'') || 0,
+            lancar: +(document.getElementById('rLancar')?.value||'') || 0,
+            tartil: +(document.getElementById('rTartil')?.value||'') || 0,
+            adab: +(document.getElementById('rAdab')?.value||'') || 0,
+            akhir: +(document.getElementById('nilaiAkhir')?.textContent||'') || 0,
+            predikat: document.getElementById('predikat')?.textContent || '',
           },
-          catatan: $('#catatan')?.value.trim() || '',
+          catatan: document.getElementById('catatan')?.value.trim() || '',
           dibuat: new Date().toISOString(),
         };
-
-        const btn = $('#btnSimpan');
-        btn.disabled = true; const oldText = btn.textContent; btn.textContent = 'Menyimpan…';
-
-        try{
-          const r = await fetch('/.netlify/functions/save-penilaian', {
-            method:'POST',
-            headers:{
-              'Content-Type':'application/json',
-              'Authorization': `Bearer ${getToken()}`
-            },
-            body: JSON.stringify(data)
-          });
-          const j = await r.json();
-          if (!r.ok || !j.ok) throw new Error(j.error || 'Gagal menyimpan');
-          btn.textContent = 'Tersimpan ✓';
-          setTimeout(()=>{ btn.disabled=false; btn.textContent=oldText; }, 900);
-          console.log('Tersimpan ke:', j.path);
-        }catch(err){
-          alert('Gagal menyimpan: ' + (err.message||err));
-          btn.disabled=false; btn.textContent=oldText;
-        }
+        console.log('[SIMPAN DUMMY] Data penilaian:', d);
+        const btn = document.getElementById('btnSimpan');
+        const old = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Tersimpan (dummy)…';
+        setTimeout(()=>{ btn.disabled=false; btn.textContent=old; }, 900);
       });
 
       // Placeholder PDF
-      $('#btnUnduhPdf')?.addEventListener('click', ()=> alert('Export PDF masih placeholder. Nanti bisa pakai jsPDF atau html2canvas.') );
+      document.getElementById('btnUnduhPdf')?.addEventListener('click', ()=> alert('Export PDF masih placeholder. Nanti bisa pakai jsPDF atau html2canvas.') );
     });
+
+    // (Opsional) Kalau suatu saat ingin mengaktifkan dashboard secara manual:
+    // function bootDashboard(){ loadQuran(); initRanges(); initFontScale(); hitungNilaiAkhir(); }
   </script>
 </body>
 </html>
