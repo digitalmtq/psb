@@ -1,14 +1,15 @@
-// CommonJS version (paling kompatibel)
-exports.handler = async function () {
-  const token = process.env.PSB_TOKEN;
-  const githubApiUrl = "https://api.github.com/repos/digitalmtq/psbserver/contents/.user.json?ref=main";
+// netlify/functions/get-users.js
+import { Buffer } from "node:buffer";
+
+export async function handler() {
+  const token = process.env.PSB_TOKEN; // ganti env jadi PSB_TOKEN
+  const githubApiUrl = "https://api.github.com/repos/digitalmtq/psbserver/contents/user.json?ref=main";
 
   try {
     const response = await fetch(githubApiUrl, {
       headers: {
         Authorization: `token ${token}`,
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": "netlify-get-users"
+        Accept: "application/vnd.github.v3+json"
       }
     });
 
@@ -21,14 +22,14 @@ exports.handler = async function () {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      body: content
+      headers: { "Content-Type": "application/json" },
+      body: content // langsung JSON string
     };
   } catch (error) {
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: error.message })
     };
   }
-};
+}
