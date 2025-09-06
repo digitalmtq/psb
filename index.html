@@ -30,7 +30,7 @@
     .input{width:100%; padding:11px 12px; border:1px solid var(--soft); border-radius:10px; background:#fff; font:inherit}
     .btn{appearance:none; border:1px solid var(--soft); background:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; font:inherit}
     .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff; width:100%}
-    .err{color:#b91c1c; font-size:12px; min-height:16px; margin-top:6px}
+    .err{color:#b91c1c; font-size:12px; min-height:16px; margin-top:6px; white-space:pre-line}
     .hint{font-size:12px; color:var(--muted); margin-top:8px}
     .row-between{display:flex; justify-content:space-between; align-items:center; gap:8px}
 
@@ -97,14 +97,14 @@
       <h1>Portal Penilaian</h1>
       <p>Masuk untuk mengakses dashboard penilaian.</p>
 
-      <form id="loginForm" onsubmit="return false;">
+      <form id="loginForm">
         <div class="form-row">
           <label>Username</label>
-          <input class="input" id="loginUser" placeholder="ustadz / atau NIS (mis. 552233)" autocomplete="username" />
+          <input class="input" id="loginUser" placeholder="ustadz / atau NIS (mis. 552233)" autocomplete="username" required />
         </div>
         <div class="form-row">
           <label>Password</label>
-          <input class="input" id="loginPass" type="password" placeholder="••••••" autocomplete="current-password" />
+          <input class="input" id="loginPass" type="password" placeholder="••••••" autocomplete="current-password" required />
         </div>
         <div class="row-between" style="margin:4px 0 10px">
           <label style="display:flex; gap:6px; align-items:center; font-size:12px; color:var(--muted)">
@@ -112,7 +112,7 @@
           </label>
           <span class="hint">Demo: <b>ustadz</b>/<b>123456</b> atau NIS=Password</span>
         </div>
-        <button class="btn primary" id="btnLogin">Masuk</button>
+        <button class="btn primary" id="btnLogin" type="submit">Masuk</button>
         <div class="err" id="loginErr"></div>
       </form>
     </div>
@@ -223,8 +223,17 @@
 
   <script>
     /* =========================
+       ENDPOINTS Netlify Functions
+       ========================= */
+    const FN = {
+      AUTH_LOGIN: '/.netlify/functions/auth-login',
+      GET_USERS:  '/.netlify/functions/get-users'
+    };
+
+    /* =========================
        AUTH MODULE (Portal Login)
        ========================= */
+    const DEBUG_AUTH = false; // ganti true untuk debug
     const AUTH_KEY = 'mtq_session_v1';
     const $  = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
@@ -246,35 +255,61 @@
     function showApp(){
       $('#authWrap').hidden=true; $('#app').hidden=false;
       const s = getSession(); $('#chipUser').textContent = s ? `${s.name} • ${s.role}` : '–';
-      // jika santri, kunci NIS
-      const nisEl = $('#nisSantri');
-      if(s?.role==='santri' && s?.nis){ nisEl.value = s.nis; nisEl.setAttribute('readonly','readonly'); }
-      else { nisEl.removeAttribute('readonly'); }
+      const nisEl = $('#nisSantri'); const kelasEl = $('#kelasSantri');
+      if(s?.role==='santri'){
+        if(s?.nis){ nisEl.value = s.nis; nisEl.setAttribute('readonly','readonly'); }
+        if(s?.meta?.kelas){ kelasEl.value = s.meta.kelas; }
+      }else{ nisEl.removeAttribute('readonly'); }
+      const tgl = $('#tanggal'); if(tgl && !tgl.value){ tgl.value = new Date().toISOString().slice(0,10); }
       if(!window.__APP_LOADED__){ window.__APP_LOADED__=true; loadQuran(); }
     }
 
     // Boot
     (function boot(){ getSession() ? showApp() : showLogin(); })();
 
-    // Login submit → Netlify Function
-    $('#btnLogin').addEventListener('click', async ()=>{
-      const u = $('#loginUser').value.trim();
-      const p = $('#loginPass').value.trim();
-      const remember = $('#rememberMe').checked;
-      const err = $('#loginErr'); err.textContent = '';
+    function showLoginError(message){
+      const err = $('#loginErr'); err.textContent = message || 'Login gagal.';
+    }
+
+    async function doLogin(u, p, remember){
+      const btn = $('#btnLogin'); showLoginError(''); btn.disabled = true; btn.textContent = 'Memproses…';
       try{
-        const res = await fetch('/.netlify/functions/auth-login', {
-          method:'POST', headers:{'Content-Type':'application/json'},
+        const res = await fetch(FN.AUTH_LOGIN, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ username:u, password:p })
         });
-        const data = await res.json();
-        if(!res.ok || !data.ok){ err.textContent = data.error || 'Login gagal.'; return; }
+        const text = await res.text();
+        let data = {}; try{ data = JSON.parse(text); }catch{}
+        if(DEBUG_AUTH) console.log('[auth]', res.status, data || text);
+
+        if(!res.ok || !data.ok){
+          const msg = data?.error
+            || (res.status===401 ? 'Username / password salah.'
+              : res.status===502 ? 'Gagal menghubungi GitHub (token/scope?).'
+              : 'Login gagal. Periksa koneksi & server.');
+          showLoginError(msg);
+          return false;
+        }
         setSession(data.session, remember);
         $('#loginPass').value = '';
         showApp();
+        return true;
       }catch(e){
-        console.error(e); err.textContent = 'Tidak bisa menghubungi server login.';
+        console.error(e); showLoginError('Tidak bisa menghubungi server login.'); return false;
+      }finally{
+        btn.disabled = false; btn.textContent = 'Masuk';
       }
+    }
+
+    // Submit form & Enter
+    $('#loginForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const u = $('#loginUser').value.trim();
+      const p = $('#loginPass').value.trim();
+      if(!u || !p){ showLoginError('Mohon isi username & password.'); return; }
+      const remember = $('#rememberMe').checked;
+      doLogin(u,p,remember);
     });
 
     // Logout
@@ -504,6 +539,7 @@
       $('#penilaianForm')?.reset?.(); $('#catatan').value='';
       wordMarks={}; $$('.w').forEach(el=> el.classList.remove('mark-green','mark-yellow','mark-red'));
       $('#pageSelect').value='1'; applyPageSelection(1); setRingkasan(100);
+      const tgl = $('#tanggal'); if(tgl){ tgl.value = new Date().toISOString().slice(0,10); }
     });
 
     $('#btnSimpan').addEventListener('click', ()=>{
