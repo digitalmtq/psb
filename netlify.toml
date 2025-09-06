@@ -1,0 +1,12 @@
+[build]
+  functions = "netlify/functions"
+  publish   = "dist"   # ubah kalau frontend kamu bukan di folder dist
+
+[functions]
+  node_bundler = "esbuild"
+
+# Optional: CORS header global
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
